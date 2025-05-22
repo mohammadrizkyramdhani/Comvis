@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Compression & Restoration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Image Compression & Restoration</h1>
+
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="imageInput" name="image" accept="image/*" required>
+            
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="operation" value="compress" checked>
+                    Compress
+                </label>
+                <label>
+                    <input type="radio" name="operation" value="restore">
+                    Restore
+                </label>
+            </div>
+
+            <button type="submit">Process Image</button>
+        </form>
+
+        <div id="result">
+            <h2>Comparison:</h2>
+            <div id="comparison">
+                <div>
+                    <p>Original Image:</p>
+                    <img id="originalImage" src="" alt="Original Image" style="display:none;">
+                </div>
+                <div>
+                    <p>Processed Image:</p>
+                    <img id="outputImage" src="" alt="Processed Image" style="display:none;">
+                </div>
+            </div>
+            <a id="downloadLink" href="#" download style="display:none;">Download Image</a>
+        </div>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
