@@ -2,27 +2,34 @@ import cv2
 import numpy as np
 
 def restore_image(np_image):
-    # 1. Denoising warna (tanpa menghilangkan tepi tajam)
-    denoised = cv2.bilateralFilter(np_image, d=15, sigmaColor=90, sigmaSpace=90)
+    # 1. Konversi ke grayscale
+    gray = cv2.cvtColor(np_image, cv2.COLOR_BGR2GRAY)
 
-    # 2. Ubah ke HSV untuk peningkatan kontras pada channel V
-    hsv = cv2.cvtColor(denoised, cv2.COLOR_BGR2HSV)
-    v = hsv[..., 2]
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    hsv[..., 2] = clahe.apply(v)
-    enhanced = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    # 2. Denoise
+    denoised = cv2.fastNlMeansDenoising(gray, h=15, templateWindowSize=7, searchWindowSize=21)
 
-    # 3. Deteksi goresan putih dengan threshold tinggi
-    gray = cv2.cvtColor(enhanced, cv2.COLOR_BGR2GRAY)
-    _, scratch_mask = cv2.threshold(gray, 245, 255, cv2.THRESH_BINARY)
+    # 3. Equalisasi histogram
+    equalized = cv2.equalizeHist(denoised)
 
-    # 4. Inpainting untuk menghapus goresan putih
-    inpainted = cv2.inpaint(enhanced, scratch_mask, 3, cv2.INPAINT_TELEA)
+    # 4. Deteksi goresan terang dan gelap
+    _, light_scratches = cv2.threshold(equalized, 245, 255, cv2.THRESH_BINARY)
+    _, dark_spots = cv2.threshold(equalized, 10, 255, cv2.THRESH_BINARY_INV)
+    mask = cv2.bitwise_or(light_scratches, dark_spots)
 
-    # 5. Optional: sharpening halus
-    blurred = cv2.GaussianBlur(inpainted, (0, 0), 3)
-    sharpened = cv2.addWeighted(inpainted, 1.5, blurred, -0.5, 0)
+    # 5. Inpainting
+    inpainted = cv2.inpaint(equalized, mask, 3, cv2.INPAINT_TELEA)
 
-    # 6. Encode ke JPEG
-    _, encimg = cv2.imencode('.jpg', sharpened)
+    # 6. Smoothing
+    smooth = cv2.bilateralFilter(inpainted, d=1, sigmaColor=75, sigmaSpace=75)
+
+    # 7. Sharpening (Unsharp Masking)
+    blurred = cv2.GaussianBlur(smooth, (9, 9), 10)
+    sharpened = cv2.addWeighted(smooth, 1.5, blurred, -0.5, 0)
+
+    # 8. Convert ke BGR
+    result = cv2.cvtColor(sharpened, cv2.COLOR_GRAY2BGR)
+
+    # 9. Encode ke JPG
+    _, encimg = cv2.imencode('.jpg', result)
     return encimg
+

@@ -5,6 +5,8 @@ import io
 
 from process.compress import compress_image
 from process.restore import restore_image
+from process.segmentasi import segmentasi_image
+from process.preprocessing import preprocessing_image
 
 app = Flask(__name__)
 
@@ -24,10 +26,15 @@ def process():
         result = compress_image(np_image)
     elif operation == 'restore':
         result = restore_image(np_image)
+    elif operation == 'segmentasi':
+        result = segmentasi_image(np_image)
+    elif operation == 'preprocessing':
+        result = preprocessing_image(np_image)
     else:
         return "Invalid operation", 400
 
-    return send_file(io.BytesIO(result.tobytes()), mimetype='image/jpeg')
+    return send_file(io.BytesIO(result), mimetype='image/jpeg')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
